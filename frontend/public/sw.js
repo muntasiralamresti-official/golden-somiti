@@ -1,14 +1,20 @@
-const CACHE_NAME = 'golden-society-pwa-v1';
+const CACHE_NAME = 'golden-society-pwa-v2';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
   '/manifest.webmanifest',
-  '/icon.svg'
+  '/icon.svg',
+  '/icon-192.png',
+  '/icon-512.png'
 ];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_ASSETS))
+    caches.open(CACHE_NAME).then((cache) => {
+      return Promise.allSettled(
+        STATIC_ASSETS.map((url) => cache.add(url).catch((err) => console.warn('Cache add failed for:', url, err)))
+      );
+    })
   );
   self.skipWaiting();
 });
@@ -35,8 +41,10 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       fetch(request)
         .then((response) => {
-          const cloned = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, cloned));
+          if (response && response.status === 200) {
+            const cloned = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(request, cloned));
+          }
           return response;
         })
         .catch(() => caches.match(request))
@@ -44,12 +52,14 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Network-first with cache fallback for app shell
+  // Network-first with cache fallback for app assets
   event.respondWith(
     fetch(request)
       .then((response) => {
-        const cloned = response.clone();
-        caches.open(CACHE_NAME).then((cache) => cache.put(request, cloned));
+        if (response && response.status === 200) {
+          const cloned = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(request, cloned));
+        }
         return response;
       })
       .catch(() => caches.match(request).then((res) => res || caches.match('/index.html')))

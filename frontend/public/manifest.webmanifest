@@ -1,4 +1,5 @@
 {
+  "id": "/?source=pwa",
   "name": "গোল্ডেন সমিতি (Golden Somiti)",
   "short_name": "গোল্ডেন সমিতি",
   "description": "গোল্ডেন সমিতি - তহবিল, সদস্য কালেকশন, বকেয়া ও খরচের হিসাব ড্যাশবোর্ড",
@@ -9,12 +10,48 @@
   "background_color": "#090d16",
   "theme_color": "#0f172a",
   "lang": "bn",
+  "dir": "ltr",
+  "categories": ["finance", "productivity", "utilities"],
   "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
     {
       "src": "/icon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
-      "purpose": "any maskable"
+      "purpose": "any"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshot-mobile.png",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "গোল্ডেন সমিতি মোবাইল ভিউ"
+    },
+    {
+      "src": "/screenshot-desktop.png",
+      "sizes": "1920x1080",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "গোল্ডেন সমিতি ড্যাশবোর্ড ভিউ"
     }
   ]
 }
