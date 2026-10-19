@@ -1,0 +1,20 @@
+{
+  "name": "গোল্ডেন সমিতি (Golden Somiti)",
+  "short_name": "গোল্ডেন সমিতি",
+  "description": "গোল্ডেন সমিতি - তহবিল, সদস্য কালেকশন, বকেয়া ও খরচের হিসাব ড্যাশবোর্ড",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#090d16",
+  "theme_color": "#0f172a",
+  "lang": "bn",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

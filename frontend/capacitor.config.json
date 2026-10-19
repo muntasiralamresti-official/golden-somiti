@@ -1,0 +1,10 @@
+{
+  "appId": "com.goldensomiti.app",
+  "appName": "গোল্ডেন সমিতি",
+  "webDir": "dist",
+  "bundledWebRuntime": false,
+  "server": {
+    "androidScheme": "https",
+    "cleartext": true
+  }
+}
