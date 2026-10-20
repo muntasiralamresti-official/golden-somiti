@@ -1030,6 +1030,7 @@ export function YearConfigModal({
   selectedYear,
   fontSize = 'md',
   onFontSizeChange,
+  onOpenInstallGuide,
   onOpenAppHub,
   onOpenBackup,
   onClose,
@@ -1181,6 +1182,30 @@ export function YearConfigModal({
               ))}
             </div>
           </div>
+
+          {/* Mobile App Install Button */}
+          {onOpenInstallGuide && (
+            <div className="rounded-2xl bg-gradient-to-r from-amber-950/40 via-slate-900 to-slate-900 border border-amber-500/40 p-3 flex items-center justify-between gap-3">
+              <div>
+                <span className="text-xs font-semibold text-amber-300 block">
+                  📱 মোবাইলে অ্যাপ ইনস্টল করুন
+                </span>
+                <span className="text-[11px] text-slate-400">
+                  হোমস্ক্রিনে ১-ক্লিক মোবাইল অ্যাপ যুক্ত ও ব্যবহার নির্দেশিকা
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  onClose();
+                  onOpenInstallGuide();
+                }}
+                className="shrink-0 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 px-3 py-1.5 text-xs font-bold text-slate-950 shadow hover:brightness-110 cursor-pointer"
+              >
+                ইনস্টল গাইড
+              </button>
+            </div>
+          )}
 
           {/* APK & Image Optimizer Studio Link */}
           {onOpenAppHub && (

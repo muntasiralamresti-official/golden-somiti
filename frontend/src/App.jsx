@@ -30,6 +30,7 @@ import {
 } from './components/ActionModals';
 import BackupAndHistoryView from './components/BackupAndHistoryView';
 import ImageAndAppHub from './components/ImageAndAppHub';
+import { InstallBanner, InstallGuideModal } from './components/InstallPrompt';
 import {
   BENGALI_MONTHS,
   formatBDT,
@@ -74,22 +75,61 @@ export default function App() {
   const [activeProfileMemberId, setActiveProfileMemberId] = useState(null);
   const [isAppHubModalOpen, setIsAppHubModalOpen] = useState(false);
 
-  // PWA Deferred Prompt State
+  // PWA Deferred Prompt & Mobile Install State
   const [deferredPrompt, setDeferredPrompt] = useState(null);
+  const [isInstalled, setIsInstalled] = useState(false);
+  const [showInstallBanner, setShowInstallBanner] = useState(true);
+  const [isInstallGuideOpen, setIsInstallGuideOpen] = useState(false);
 
   // PDF Downloading State
   const [isDownloadingPDF, setIsDownloadingPDF] = useState(false);
   const [downloadingMemberId, setDownloadingMemberId] = useState(null);
 
   useEffect(() => {
+    const isStandalone =
+      window.matchMedia('(display-mode: standalone)').matches ||
+      window.navigator.standalone === true;
+    if (isStandalone) {
+      setIsInstalled(true);
+    }
+
     const handleBeforeInstallPrompt = (e) => {
       e.preventDefault();
       setDeferredPrompt(e);
+      setShowInstallBanner(true);
     };
+
+    const handleAppInstalled = () => {
+      setIsInstalled(true);
+      setDeferredPrompt(null);
+      setShowInstallBanner(false);
+    };
+
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-    return () =>
+    window.addEventListener('appinstalled', handleAppInstalled);
+    return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener('appinstalled', handleAppInstalled);
+    };
   }, []);
+
+  const handleTriggerInstall = async () => {
+    if (deferredPrompt) {
+      try {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
+          setDeferredPrompt(null);
+          setShowInstallBanner(false);
+        }
+      } catch (err) {
+        console.warn('Install prompt error:', err);
+        setIsInstallGuideOpen(true);
+      }
+    } else {
+      setIsInstallGuideOpen(true);
+    }
+  };
 
   const fetchDashboard = useCallback(
     async (yr = selectedYear) => {
@@ -310,6 +350,14 @@ export default function App() {
 
   return (
     <div className={`min-h-screen golden-art-bg pb-32 sm:pb-16 font-scale-${fontSize}`}>
+      {/* Mobile Install Banner */}
+      {!isInstalled && showInstallBanner && (
+        <InstallBanner
+          onInstall={handleTriggerInstall}
+          onDismiss={() => setShowInstallBanner(false)}
+        />
+      )}
+
       <div className="mx-auto max-w-7xl px-3 sm:px-6 pt-3 sm:pt-5">
         {/* Top Artistic Header */}
         <ArtisticHeader
@@ -1589,6 +1637,7 @@ export default function App() {
         selectedYear={selectedYear}
         fontSize={fontSize}
         onFontSizeChange={handleFontSizeChange}
+        onOpenInstallGuide={() => setIsInstallGuideOpen(true)}
         onOpenAppHub={() => setIsAppHubModalOpen(true)}
         onOpenBackup={() => {
           setActiveTab('history');
@@ -1596,6 +1645,13 @@ export default function App() {
         }}
         onClose={() => setIsYearConfigOpen(false)}
         onSave={handleSaveYearConfig}
+      />
+
+      <InstallGuideModal
+        isOpen={isInstallGuideOpen}
+        onClose={() => setIsInstallGuideOpen(false)}
+        deferredPrompt={deferredPrompt}
+        onTriggerInstall={handleTriggerInstall}
       />
     </div>
   );
