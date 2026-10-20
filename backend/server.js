@@ -39,6 +39,15 @@ const MONGO_URI =
 
 app.use(cors());
 app.use(express.json({ limit: '25mb' }));
+const BN_TO_EN = {
+  '০': '0', '১': '1', '২': '2', '৩': '3', '৪': '4',
+  '৫': '5', '৬': '6', '৭': '7', '৮': '8', '৯': '9'
+};
+
+export function toEnglishNumber(val) {
+  if (val === null || val === undefined) return '';
+  return String(val).replace(/[০-৯]/g, (d) => BN_TO_EN[d] || d);
+}
 
 // Cached MongoDB Connection for Vercel Serverless & Local Server
 let cachedDbPromise = null;
@@ -193,18 +202,18 @@ app.post('/api/members', async (req, res) => {
       return res.status(400).json({ error: 'সদস্যের নাম প্রদান করা আবশ্যক' });
     }
 
-    let finalCode = memberCode ? String(memberCode).trim() : '';
+    let finalCode = memberCode ? toEnglishNumber(memberCode).trim() : '';
     if (!finalCode) {
       const count = await Member.countDocuments();
       finalCode = `GS-${String(count + 1).padStart(2, '0')}`;
     }
 
-    const mAmt = Number(monthlyAmount) || 1500;
-    const yTarget = Number(yearlyTarget) || mAmt * 12;
-    const jYear = Number(joinYear) || Number(selectedYear) || new Date().getFullYear();
+    const mAmt = Number(toEnglishNumber(monthlyAmount)) || 1500;
+    const yTarget = Number(toEnglishNumber(yearlyTarget)) || mAmt * 12;
+    const jYear = Number(toEnglishNumber(joinYear)) || Number(toEnglishNumber(selectedYear)) || new Date().getFullYear();
 
     const yearlyPlans = {};
-    const targetYr = Number(selectedYear) || new Date().getFullYear();
+    const targetYr = Number(toEnglishNumber(selectedYear)) || new Date().getFullYear();
     yearlyPlans[String(targetYr)] = {
       monthlyAmount: mAmt,
       yearlyTarget: yTarget,
@@ -214,7 +223,7 @@ app.post('/api/members', async (req, res) => {
     const created = await Member.create({
       memberCode: finalCode,
       name: String(name).trim(),
-      phone: phone ? String(phone).trim() : '',
+      phone: phone ? toEnglishNumber(phone).trim() : '',
       designation: designation ? String(designation).trim() : 'সদস্য',
       joinYear: jYear,
       joinDate: joinDate || new Date().toISOString().slice(0, 10),
@@ -259,11 +268,11 @@ app.put('/api/members/:id', async (req, res) => {
       return res.status(404).json({ error: 'সদস্য পাওয়া যায়নি' });
     }
 
-    if (memberCode !== undefined) member.memberCode = String(memberCode).trim();
+    if (memberCode !== undefined) member.memberCode = toEnglishNumber(memberCode).trim();
     if (name !== undefined) member.name = String(name).trim();
-    if (phone !== undefined) member.phone = String(phone).trim();
+    if (phone !== undefined) member.phone = toEnglishNumber(phone).trim();
     if (designation !== undefined) member.designation = String(designation).trim();
-    if (joinYear !== undefined) member.joinYear = Number(joinYear);
+    if (joinYear !== undefined) member.joinYear = Number(toEnglishNumber(joinYear));
     if (joinDate !== undefined) member.joinDate = joinDate;
     if (active !== undefined) member.active = Boolean(active);
     if (note !== undefined) member.note = note;
@@ -271,14 +280,14 @@ app.put('/api/members/:id', async (req, res) => {
     if (photoMeta !== undefined) member.photoMeta = photoMeta;
 
     if (monthlyAmount !== undefined) {
-      const mAmt = Number(monthlyAmount);
-      const yTarget = yearlyTarget !== undefined ? Number(yearlyTarget) : mAmt * 12;
+      const mAmt = Number(toEnglishNumber(monthlyAmount));
+      const yTarget = yearlyTarget !== undefined ? Number(toEnglishNumber(yearlyTarget)) : mAmt * 12;
       member.monthlyAmount = mAmt;
       member.yearlyTarget = yTarget;
 
       if (planYear && planYear !== 'all') {
         if (!member.yearlyPlans) member.yearlyPlans = new Map();
-        member.yearlyPlans.set(String(planYear), {
+        member.yearlyPlans.set(String(toEnglishNumber(planYear)), {
           monthlyAmount: mAmt,
           yearlyTarget: yTarget,
           note: note || ''
@@ -329,16 +338,21 @@ app.post('/api/payments', async (req, res) => {
       return res.status(400).json({ error: 'সদস্য নির্বাচন করুন' });
     }
 
-    const yr = Number(year) || new Date().getFullYear();
+    const yr = Number(toEnglishNumber(year)) || new Date().getFullYear();
     const dt = date || new Date().toISOString().slice(0, 10);
     const countExisting = await Payment.countDocuments({ year: yr });
 
+    const totalAmt = Number(toEnglishNumber(amount));
+    if (!totalAmt || totalAmt <= 0) {
+      return res.status(400).json({ error: 'সঠিক টাকার পরিমাণ লিখুন' });
+    }
+
     if (Array.isArray(months) && months.length > 1) {
-      const perMonthAmount = Math.round((Number(amount) / months.length) * 100) / 100;
+      const perMonthAmount = Math.round((totalAmt / months.length) * 100) / 100;
       const docs = months.map((mNum, idx) => ({
         memberId,
         year: yr,
-        month: Number(mNum),
+        month: Number(toEnglishNumber(mNum)),
         amount: perMonthAmount,
         date: dt,
         paymentType: paymentType || 'মাসিক কিস্তি',
@@ -349,11 +363,6 @@ app.post('/api/payments', async (req, res) => {
       const inserted = await Payment.insertMany(docs);
       await writeAutoBackupSnapshot('Recorded Multi-Month Collection');
       return res.status(201).json(inserted);
-    }
-
-    const totalAmt = Number(amount);
-    if (!totalAmt || totalAmt <= 0) {
-      return res.status(400).json({ error: 'সঠিক টাকার পরিমাণ লিখুন' });
     }
 
     const created = await Payment.create({
@@ -437,12 +446,12 @@ app.post('/api/expenses', async (req, res) => {
     if (!title || !String(title).trim()) {
       return res.status(400).json({ error: 'খরচের বিবরণ লিখুন' });
     }
-    const amt = Number(amount);
+    const amt = Number(toEnglishNumber(amount));
     if (!amt || amt <= 0) {
       return res.status(400).json({ error: 'খরচের সঠিক পরিমাণ লিখুন' });
     }
 
-    const yr = Number(year) || new Date().getFullYear();
+    const yr = Number(toEnglishNumber(year)) || new Date().getFullYear();
     const countExp = await Expense.countDocuments({ year: yr });
 
     const created = await Expense.create({
@@ -621,6 +630,8 @@ app.post('/api/backups/restore', async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
+});
+
 // Reset all transactions (Zero out collections & expenses, retain members & settings)
 app.post('/api/backups/reset-transactions', async (req, res) => {
   try {

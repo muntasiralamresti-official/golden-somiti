@@ -162,8 +162,14 @@ export default function App() {
       body: JSON.stringify(payload)
     });
     if (!res.ok) {
-      const err = await res.json();
-      alert(err.error || 'সদস্য সংরক্ষণে ত্রুটি');
+      let msg = 'সদস্য সংরক্ষণে ত্রুটি হয়েছে';
+      try {
+        const err = await res.json();
+        if (err?.error) msg = err.error;
+      } catch {
+        // Fallback for non-JSON server error responses
+      }
+      alert(msg);
       return;
     }
     setEditingMember(null);
@@ -198,8 +204,14 @@ export default function App() {
       body: JSON.stringify(payload)
     });
     if (!res.ok) {
-      const err = await res.json();
-      alert(err.error || 'জমা সংরক্ষণে ত্রুটি');
+      let msg = 'জমা সংরক্ষণে ত্রুটি হয়েছে';
+      try {
+        const err = await res.json();
+        if (err?.error) msg = err.error;
+      } catch {
+        // Fallback for non-JSON server error responses
+      }
+      alert(msg);
       return;
     }
     setPaymentPrefill(null);
@@ -220,8 +232,14 @@ export default function App() {
       body: JSON.stringify(payload)
     });
     if (!res.ok) {
-      const err = await res.json();
-      alert(err.error || 'খরচ সংরক্ষণে ত্রুটি');
+      let msg = 'খরচ সংরক্ষণে ত্রুটি হয়েছে';
+      try {
+        const err = await res.json();
+        if (err?.error) msg = err.error;
+      } catch {
+        // Fallback for non-JSON server error responses
+      }
+      alert(msg);
       return;
     }
     await fetchDashboard(selectedYear);

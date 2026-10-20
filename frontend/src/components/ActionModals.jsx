@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, Calculator, Check, Image as ImageIcon, Trash2 } from 'lucide-react';
-import { BENGALI_MONTHS, formatBDT, toBanglaNumber } from '../utils/formatters';
+import { BENGALI_MONTHS, formatBDT, toBanglaNumber, toEnglishNumber } from '../utils/formatters';
 import { optimizeImageFile, formatBytes } from '../utils/imageOptimizer';
 
 export function MemberModal({
@@ -111,7 +111,12 @@ export function MemberModal({
     try {
       await onSave({
         ...form,
-        selectedYear: form.planYear
+        phone: toEnglishNumber(form.phone),
+        memberCode: form.memberCode ? toEnglishNumber(form.memberCode) : '',
+        monthlyAmount: Number(toEnglishNumber(form.monthlyAmount)) || 1500,
+        yearlyTarget: Number(toEnglishNumber(form.yearlyTarget)) || 18000,
+        joinYear: Number(toEnglishNumber(form.joinYear)) || defaultYr,
+        selectedYear: Number(toEnglishNumber(form.planYear)) || defaultYr
       });
       onClose();
     } finally {
@@ -414,15 +419,16 @@ export function PaymentModal({
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!memberId || Number(amount) <= 0) return;
+    const cleanAmt = Number(toEnglishNumber(amount));
+    if (!memberId || cleanAmt <= 0) return;
     setSaving(true);
     try {
       await onSave({
         memberId,
-        year: Number(year),
-        month: selectedMonths[0],
-        months: selectedMonths.length > 1 ? selectedMonths : undefined,
-        amount: Number(amount),
+        year: Number(toEnglishNumber(year)),
+        month: Number(toEnglishNumber(selectedMonths[0])),
+        months: selectedMonths.length > 1 ? selectedMonths.map((m) => Number(toEnglishNumber(m))) : undefined,
+        amount: cleanAmt,
         date,
         paymentType,
         method,
@@ -668,7 +674,7 @@ export function ExpenseModal({
 
   if (!isOpen) return null;
 
-  const numAmount = Number(amount) || 0;
+  const numAmount = Number(toEnglishNumber(amount)) || 0;
   const targetCount =
     splitType === 'selected'
       ? Math.max(1, participants.length)

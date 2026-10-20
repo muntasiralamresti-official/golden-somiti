@@ -1,4 +1,4 @@
-const CACHE_NAME = 'golden-society-pwa-v2';
+const CACHE_NAME = 'golden-society-pwa-v3';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
@@ -12,7 +12,9 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return Promise.allSettled(
-        STATIC_ASSETS.map((url) => cache.add(url).catch((err) => console.warn('Cache add failed for:', url, err)))
+        STATIC_ASSETS.map((url) =>
+          cache.add(url).catch((err) => console.warn('Cache add failed for:', url, err))
+        )
       );
     })
   );
@@ -35,6 +37,8 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   if (request.method !== 'GET') return;
+  // Ignore non-http/https requests (e.g. chrome-extension://)
+  if (!request.url.startsWith('http://') && !request.url.startsWith('https://')) return;
 
   // Network-first for API requests, fallback to cached response if offline
   if (request.url.includes('/api/')) {

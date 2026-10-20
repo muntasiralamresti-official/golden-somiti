@@ -1,8 +1,17 @@
 const BN_DIGITS = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
+const BN_TO_EN = {
+  '০': '0', '১': '1', '২': '2', '৩': '3', '৪': '4',
+  '৫': '5', '৬': '6', '৭': '7', '৮': '8', '৯': '9'
+};
 
 export function toBanglaNumber(val) {
   if (val === null || val === undefined) return '০';
   return String(val).replace(/\d/g, (d) => BN_DIGITS[Number(d)]);
+}
+
+export function toEnglishNumber(val) {
+  if (val === null || val === undefined) return '';
+  return String(val).replace(/[০-৯]/g, (d) => BN_TO_EN[d] || d);
 }
 
 export function formatBDT(amount, showSymbol = true) {
